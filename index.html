@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Daily Line-Up</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,500;8..60,600&family=Karla:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper: #EFEAE0;
+    --paper-raised: #F6F2E9;
+    --line: #D9D1BE;
+    --ink: #24302A;
+    --ink-soft: #6B7268;
+    --moss: #4C6B52;
+    --moss-dark: #35492F;
+    --moss-bg: #DFE7DA;
+    --clay: #8B5E3C;
+    --danger: #A5453A;
+  }
+  *{ box-sizing: border-box; }
+  html,body{ margin:0; padding:0; }
+  body{
+    background: var(--paper);
+    color: var(--ink);
+    font-family: 'Karla', sans-serif;
+    min-height: 100vh;
+    display:flex;
+    justify-content:center;
+    padding: 40px 16px 80px;
+  }
+  .sheet{
+    width: 100%;
+    max-width: 640px;
+  }
+  .head{
+    display:flex;
+    align-items:flex-end;
+    justify-content:space-between;
+    gap: 16px;
+    margin-bottom: 22px;
+  }
+  h1{
+    font-family: 'Source Serif 4', serif;
+    font-weight: 600;
+    font-size: 30px;
+    margin: 0 0 4px 0;
+    letter-spacing: -0.01em;
+  }
+  .sub{
+    color: var(--ink-soft);
+    font-size: 14px;
+    margin: 0;
+  }
+  .nav{
+    display:flex;
+    align-items:center;
+    gap: 10px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 13px;
+  }
+  .nav button{
+    background: none;
+    border: 1px solid var(--line);
+    color: var(--ink);
+    width: 28px; height: 28px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 15px;
+    line-height: 1;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .nav button:hover{ background: var(--paper-raised); }
+  .day-label{
+    min-width: 118px;
+    text-align:center;
+  }
+  .day-label .dow{ font-weight:500; color: var(--ink); }
+  .day-label .today-tag{
+    color: var(--clay);
+    font-size: 11px;
+    display:block;
+  }
+  .progress-row{
+    display:flex;
+    align-items:center;
+    gap: 12px;
+    margin-bottom: 26px;
+  }
+  .progress-track{
+    flex:1;
+    height: 6px;
+    background: var(--line);
+    border-radius: 3px;
+    overflow:hidden;
+  }
+  .progress-fill{
+    height:100%;
+    background: var(--moss);
+    border-radius: 3px;
+    transition: width 0.35s ease;
+  }
+  .progress-count{
+    font-family:'IBM Plex Mono', monospace;
+    font-size: 13px;
+    color: var(--ink-soft);
+    white-space: nowrap;
+  }
+  .list{
+    border-top: 1px solid var(--line);
+  }
+  .row{
+    display:flex;
+    align-items:flex-start;
+    gap: 14px;
+    padding: 13px 2px;
+    border-bottom: 1px solid var(--line);
+    position: relative;
+  }
+  .row.done{ background: var(--moss-bg); margin: 0 -12px; padding-left: 14px; padding-right: 14px; border-bottom-color: #CBD6C4; }
+  .row.done + .row{ border-top: none; }
+  .check{
+    width: 20px; height:20px;
+    border: 1.5px solid var(--ink-soft);
+    border-radius: 4px;
+    background: var(--paper-raised);
+    cursor:pointer;
+    flex-shrink:0;
+    margin-top: 2px;
+    display:flex; align-items:center; justify-content:center;
+    padding:0;
+  }
+  .row.done .check{
+    background: var(--moss);
+    border-color: var(--moss);
+  }
+  .check svg{ width:12px; height:12px; display:none; }
+  .row.done .check svg{ display:block; }
+  .time{
+    font-family:'IBM Plex Mono', monospace;
+    font-size: 13px;
+    color: var(--ink-soft);
+    width: 52px;
+    flex-shrink:0;
+    padding-top: 2px;
+  }
+  .label{
+    flex:1;
+    font-size: 15px;
+    line-height: 1.4;
+    padding-top: 1px;
+  }
+  .row.done .label{ color: var(--moss-dark); }
+  .row.done .time{ color: var(--moss-dark); }
+  .row-actions{
+    display:flex;
+    gap: 4px;
+    opacity:0;
+    transition: opacity 0.15s;
+    flex-shrink:0;
+  }
+  .row:hover .row-actions{ opacity:1; }
+  .row-actions button{
+    background:none;
+    border:none;
+    cursor:pointer;
+    color: var(--ink-soft);
+    font-size: 13px;
+    padding: 3px 5px;
+  }
+  .row-actions button:hover{ color: var(--ink); }
+  .row-actions .del:hover{ color: var(--danger); }
+
+  .edit-fields{
+    flex:1;
+    display:flex;
+    gap: 8px;
+  }
+  .edit-fields input[type="text"]{
+    flex:1;
+    font-family:'Karla', sans-serif;
+    font-size: 15px;
+    border: none;
+    border-bottom: 1px solid var(--ink-soft);
+    background: transparent;
+    padding: 2px 0;
+    color: var(--ink);
+  }
+  .edit-fields input[type="time"]{
+    width: 92px;
+    font-family:'IBM Plex Mono', monospace;
+    font-size: 13px;
+    border: none;
+    border-bottom: 1px solid var(--ink-soft);
+    background: transparent;
+    color: var(--ink);
+    padding: 2px 0;
+  }
+  .edit-fields input:focus, .add-row input:focus{ outline:none; border-bottom-color: var(--moss); }
+
+  .add-row{
+    display:flex;
+    align-items:center;
+    gap: 14px;
+    padding: 14px 2px;
+  }
+  .add-row .plus{
+    width:20px; height:20px;
+    flex-shrink:0;
+    display:flex; align-items:center; justify-content:center;
+    color: var(--ink-soft);
+    font-size: 16px;
+  }
+  .add-row input[type="time"]{
+    width: 52px;
+    font-family:'IBM Plex Mono', monospace;
+    font-size: 13px;
+    border:none;
+    background: transparent;
+    color: var(--ink-soft);
+    padding: 2px 0;
+  }
+  .add-row input[type="text"]{
+    flex:1;
+    font-family:'Karla', sans-serif;
+    font-size: 15px;
+    border:none;
+    border-bottom: 1px dashed var(--line);
+    background: transparent;
+    padding: 4px 0;
+    color: var(--ink);
+  }
+  .add-row input[type="text"]::placeholder{ color: var(--ink-soft); }
+  .add-row input:focus{ outline:none; border-bottom-color: var(--moss); }
+  .add-row button{
+    background: var(--moss);
+    color: var(--paper-raised);
+    border:none;
+    border-radius: 5px;
+    padding: 6px 12px;
+    font-family:'Karla', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    cursor:pointer;
+    flex-shrink:0;
+  }
+  .add-row button:hover{ background: var(--moss-dark); }
+
+  .foot-note{
+    margin-top: 22px;
+    font-size: 12.5px;
+    color: var(--ink-soft);
+    line-height: 1.5;
+  }
+  .status{
+    text-align:center;
+    color: var(--ink-soft);
+    font-size: 13px;
+    padding: 30px 0;
+  }
+</style>
+</head>
+<body>
+  <div class="sheet">
+    <div class="head">
+      <div>
+        <h1>Daily Line-Up</h1>
+        <p class="sub">Tick off what's done. Edit the plan whenever it stops fitting.</p>
+      </div>
+      <div class="nav">
+        <button id="prevBtn">‹</button>
+        <div class="day-label">
+          <span class="dow" id="dowLabel">—</span>
+          <span class="today-tag" id="todayTag"></span>
+        </div>
+        <button id="nextBtn">›</button>
+      </div>
+    </div>
+
+    <div class="progress-row">
+      <div class="progress-track"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+      <div class="progress-count" id="progressCount">0/0 done</div>
+    </div>
+
+    <div id="listRoot" class="list">
+      <div class="status">Loading your line-up…</div>
+    </div>
+
+    <div class="add-row">
+      <div class="plus">+</div>
+      <input type="time" id="newTime" value="09:00">
+      <input type="text" id="newLabel" placeholder="Add a task to the day…">
+      <button id="addBtn">Add</button>
+    </div>
+
+    <p class="foot-note">Task list is shared across every day — change a time or wording here and it updates going forward. Checkmarks are tracked per day, so past days stay as you left them. Everything is saved in this browser only — it stays put if you close the tab, but won't follow you to a different phone or browser.</p>
+  </div>
+
+<script>
+const DEFAULT_TASKS = [
+  { time: "06:00", label: "Wake up & get ready" },
+  { time: "06:30", label: "Gym" },
+  { time: "09:00", label: "Stretching" },
+  { time: "09:30", label: "Breakfast" },
+  { time: "10:15", label: "Household chores" },
+  { time: "11:00", label: "Bath" },
+  { time: "11:30", label: "DSA + Java practice" },
+  { time: "13:30", label: "Short break" },
+  { time: "14:00", label: "Lunch" },
+  { time: "17:00", label: "Coffee & time with parents" },
+  { time: "18:00", label: "SQL brush-up" },
+  { time: "18:45", label: "Dinner" },
+  { time: "20:00", label: "Free time" },
+  { time: "22:00", label: "Wind down & sleep" },
+];
+
+let tasks = [];
+let currentDate = new Date();
+let completions = {};
+
+function dateKey(d){
+  return d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,"0") + "-" + String(d.getDate()).padStart(2,"0");
+}
+function isToday(d){
+  return dateKey(d) === dateKey(new Date());
+}
+function sortTasks(){
+  tasks.sort((a,b) => a.time.localeCompare(b.time));
+}
+function uid(){
+  return "t_" + Date.now() + "_" + Math.random().toString(36).slice(2,7);
+}
+
+async function loadTasks(){
+  try{
+    const raw = localStorage.getItem("lineup:tasks");
+    if(raw){
+      tasks = JSON.parse(raw);
+      return;
+    }
+  }catch(e){ /* not set yet */ }
+  tasks = DEFAULT_TASKS.map(t => ({ id: uid(), time: t.time, label: t.label }));
+  await saveTasks();
+}
+async function saveTasks(){
+  sortTasks();
+  try{
+    localStorage.setItem("lineup:tasks", JSON.stringify(tasks));
+  }catch(e){ console.error("Couldn't save tasks", e); }
+}
+async function loadCompletionsForCurrentDay(){
+  const key = "lineup:completions:" + dateKey(currentDate);
+  try{
+    const raw = localStorage.getItem(key);
+    completions = raw ? JSON.parse(raw) : {};
+  }catch(e){
+    completions = {};
+  }
+}
+async function saveCompletions(){
+  const key = "lineup:completions:" + dateKey(currentDate);
+  try{
+    localStorage.setItem(key, JSON.stringify(completions));
+  }catch(e){ console.error("Couldn't save progress", e); }
+}
+
+function formatDayLabel(d){
+  const dow = d.toLocaleDateString(undefined, { weekday: "long" });
+  const rest = d.toLocaleDateString(undefined, { day: "2-digit", month: "short" });
+  return dow + ", " + rest;
+}
+
+function render(){
+  const root = document.getElementById("listRoot");
+  root.innerHTML = "";
+
+  let doneCount = 0;
+
+  tasks.forEach(task => {
+    const isDone = !!completions[task.id];
+    if(isDone) doneCount++;
+
+    const row = document.createElement("div");
+    row.className = "row" + (isDone ? " done" : "");
+    row.dataset.id = task.id;
+
+    row.innerHTML = `
+      <button class="check" aria-label="Mark done">
+        <svg viewBox="0 0 16 16" fill="none"><path d="M3 8.5L6.2 12L13 4" stroke="#F6F2E9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+      <div class="time">${task.time}</div>
+      <div class="label">${escapeHtml(task.label)}</div>
+      <div class="row-actions">
+        <button class="edit" title="Edit">Edit</button>
+        <button class="del" title="Remove">✕</button>
+      </div>
+    `;
+    root.appendChild(row);
+
+    row.querySelector(".check").addEventListener("click", async () => {
+      completions[task.id] = !completions[task.id];
+      if(!completions[task.id]) delete completions[task.id];
+      await saveCompletions();
+      render();
+    });
+    row.querySelector(".edit").addEventListener("click", () => enterEditMode(row, task));
+    row.querySelector(".del").addEventListener("click", async () => {
+      tasks = tasks.filter(t => t.id !== task.id);
+      delete completions[task.id];
+      await saveTasks();
+      await saveCompletions();
+      render();
+    });
+  });
+
+  const total = tasks.length;
+  const pct = total ? Math.round((doneCount/total)*100) : 0;
+  document.getElementById("progressFill").style.width = pct + "%";
+  document.getElementById("progressCount").textContent = doneCount + "/" + total + " done";
+  document.getElementById("dowLabel").textContent = formatDayLabel(currentDate);
+  document.getElementById("todayTag").textContent = isToday(currentDate) ? "Today" : "";
+}
+
+function enterEditMode(row, task){
+  row.innerHTML = `
+    <div style="width:20px;flex-shrink:0;"></div>
+    <div class="edit-fields">
+      <input type="time" value="${task.time}" class="edit-time">
+      <input type="text" value="${escapeAttr(task.label)}" class="edit-label">
+    </div>
+    <div class="row-actions" style="opacity:1;">
+      <button class="save">Save</button>
+    </div>
+  `;
+  const save = async () => {
+    const newTime = row.querySelector(".edit-time").value || task.time;
+    const newLabel = row.querySelector(".edit-label").value.trim() || task.label;
+    task.time = newTime;
+    task.label = newLabel;
+    await saveTasks();
+    render();
+  };
+  row.querySelector(".save").addEventListener("click", save);
+  row.querySelector(".edit-label").addEventListener("keydown", e => { if(e.key === "Enter") save(); });
+}
+
+function escapeHtml(s){
+  return s.replace(/[&<>"']/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
+}
+function escapeAttr(s){ return escapeHtml(s); }
+
+async function goToDay(offset){
+  currentDate.setDate(currentDate.getDate() + offset);
+  await loadCompletionsForCurrentDay();
+  render();
+}
+
+document.getElementById("prevBtn").addEventListener("click", () => goToDay(-1));
+document.getElementById("nextBtn").addEventListener("click", () => goToDay(1));
+document.getElementById("addBtn").addEventListener("click", async () => {
+  const timeVal = document.getElementById("newTime").value || "09:00";
+  const labelVal = document.getElementById("newLabel").value.trim();
+  if(!labelVal) return;
+  tasks.push({ id: uid(), time: timeVal, label: labelVal });
+  await saveTasks();
+  document.getElementById("newLabel").value = "";
+  render();
+});
+document.getElementById("newLabel").addEventListener("keydown", e => {
+  if(e.key === "Enter") document.getElementById("addBtn").click();
+});
+
+(async function init(){
+  await loadTasks();
+  await loadCompletionsForCurrentDay();
+  render();
+})();
+</script>
+</body>
+</html>
